@@ -1,0 +1,145 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Every job runs offline on the stub models: no ollama, no key, no network calls.
+  DESK_PROVIDER: stub
+
+jobs:
+  lint:
+    name: Lint (ruff + mypy + bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: ruff check
+        run: poetry run ruff check content_desk tests examples
+      - name: ruff format --check
+        run: poetry run ruff format --check content_desk tests examples
+      - name: mypy
+        run: poetry run mypy content_desk
+      - name: bandit
+        run: poetry run bandit -c pyproject.toml -q -r content_desk
+
+  audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+      - name: pip-audit
+        run: |
+          # pip is tooling, not a shipped dependency: upgrade it so its own advisories don't fail the audit.
+          poetry run python -m pip install --upgrade -q pip
+          # CVE-2026-114603 (opentelemetry-api tracestate parsing, fixed in 1.45.1): google-adk 2.13
+          # pins opentelemetry-api <=1.44, so the fix can't be installed yet. See SECURITY.md.
+          poetry run pip-audit --ignore-vuln CVE-2026-114603
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Run pytest (stub models, no network)
+        run: poetry run pytest -q
+      - name: Quickstart (the whole desk, offline, with checks)
+        run: poetry run python -m examples.quickstart
+      - name: CLI (--json) on the stub
+        run: |
+          poetry run python -m content_desk --json "WAL checkpoints" > out.json
+          python - <<'PY'
+          import json
+          r = json.load(open("out.json"))
+          assert r["agents"][-1] == "editor", r["agents"]
+          assert r["review"]["approved"] is True, r["review"]
+          assert r["fact_check"]["unsupported_count"] == 1, r["fact_check"]
+          assert "## Sources" in r["final_post"]
+          print("cli ok:", len(r["review_history"]), "rounds")
+          PY
+      - name: Build the wheel and check the source pack and py.typed are inside
+        run: |
+          poetry build -q
+          python - <<'PY'
+          import glob, zipfile
+          names = zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist()
+          assert any(n.endswith("content_desk/py.typed") for n in names), names
+          assert sum(n.startswith("content_desk/sources/") for n in names) == 4, names
+          print("wheel ok:", len(names), "files")
+          PY
+
+  adk-cli:
+    name: ADK CLI (adk run, adk eval, adk web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: adk run (one turn)
+        run: |
+          poetry run adk run --in_memory content_desk "SQLite WAL readers and writers" | tee run.txt
+          grep -q "## Sources" run.txt
+      - name: adk eval (local metrics only)
+        run: |
+          poetry run adk eval content_desk evals/content_desk.evalset.json \
+            --config_file_path evals/test_config.json | tee eval.txt
+          grep -q "Tests passed: 2" eval.txt
+          grep -q "Tests failed: 0" eval.txt
+      - name: adk web (API server answers /list-apps and /run)
+        run: |
+          poetry run adk web --host 127.0.0.1 --port 8765 . > web.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf 127.0.0.1:8765/list-apps && break; sleep 1; done
+          curl -sf 127.0.0.1:8765/list-apps | grep -q content_desk
+          curl -sf -X POST 127.0.0.1:8765/apps/content_desk/users/ci/sessions/s1 \
+            -H 'content-type: application/json' -d '{}' > /dev/null
+          curl -sf -X POST 127.0.0.1:8765/run -H 'content-type: application/json' -d '{
+            "appName": "content_desk", "userId": "ci", "sessionId": "s1",
+            "newMessage": {"role": "user", "parts": [{"text": "WAL checkpoints"}]}
+          }' > events.json
+          python - <<'PY'
+          import json
+          events = json.load(open("events.json"))
+          authors = [e["author"] for e in events]
+          assert "critic" in authors and authors[-1] == "editor", authors
+          print("adk web ok:", len(events), "events")
+          PY
+          kill %1 || true

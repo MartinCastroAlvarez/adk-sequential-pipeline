@@ -1,0 +1,129 @@
+{
+  "eval_set_id": "content_desk_smoke",
+  "name": "content desk smoke set",
+  "description": "Recorded with DESK_PROVIDER=stub. The trajectory (search, read, exit_loop) and the final post must match.",
+  "eval_cases": [
+    {
+      "eval_id": "wal_basics",
+      "conversation": [
+        {
+          "invocation_id": "wal_basics-1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "SQLite write-ahead logging"
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "# A practical guide to SQLite write-ahead logging\n\nWhat follows is taken from the cited sources only.\n\n## SQLite write-ahead logging, the basics\n\nSQLite normally protects a transaction with a rollback journal that copies the original pages before they change [wal-basics]. In write-ahead logging mode, SQLite leaves the database file alone during a write and appends the changed pages to a separate file with the -wal suffix [wal-basics]. A transaction commits when a commit record is appended to the WAL file, so a commit can happen without touching the main database file [wal-basics].\n\n## Checkpoints and WAL file growth\n\nBy default SQLite runs an automatic checkpoint when the WAL file reaches 1000 pages [wal-checkpoints]. The PRAGMA wal_autocheckpoint setting changes that threshold, and a value of zero turns automatic checkpoints off [wal-checkpoints]. The PRAGMA wal_checkpoint statement runs a checkpoint by hand in one of four modes: PASSIVE, FULL, RESTART or TRUNCATE [wal-checkpoints].\n\n## Readers and writers in WAL mode\n\nIn WAL mode, readers do not block writers and a writer does not block readers [wal-concurrency]. Each reader works from a snapshot: it records the last valid commit in the WAL file when its transaction starts and ignores commits appended after that point [wal-concurrency]. There is still only one writer at a time, because all writes append to the same WAL file [wal-concurrency].\n\n## Sources\n\n- [wal-basics] SQLite write-ahead logging, the basics\n- [wal-checkpoints] Checkpoints and WAL file growth\n- [wal-concurrency] Readers and writers in WAL mode\n"
+              }
+            ]
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "search_sources",
+                "args": {
+                  "query": "SQLite write-ahead logging"
+                }
+              },
+              {
+                "name": "read_source",
+                "args": {
+                  "source_id": "wal-basics"
+                }
+              },
+              {
+                "name": "read_source",
+                "args": {
+                  "source_id": "wal-checkpoints"
+                }
+              },
+              {
+                "name": "read_source",
+                "args": {
+                  "source_id": "wal-concurrency"
+                }
+              },
+              {
+                "name": "exit_loop",
+                "args": {}
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "content_desk",
+        "user_id": "eval",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "wal_checkpoints",
+      "conversation": [
+        {
+          "invocation_id": "wal_checkpoints-1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "WAL checkpoints and checkpoint starvation"
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "# A practical guide to WAL checkpoints and checkpoint starvation\n\nWhat follows is taken from the cited sources only.\n\n## Checkpoints and WAL file growth\n\nBy default SQLite runs an automatic checkpoint when the WAL file reaches 1000 pages [wal-checkpoints]. The PRAGMA wal_autocheckpoint setting changes that threshold, and a value of zero turns automatic checkpoints off [wal-checkpoints]. The PRAGMA wal_checkpoint statement runs a checkpoint by hand in one of four modes: PASSIVE, FULL, RESTART or TRUNCATE [wal-checkpoints].\n\n## Readers and writers in WAL mode\n\nIn WAL mode, readers do not block writers and a writer does not block readers [wal-concurrency]. Each reader works from a snapshot: it records the last valid commit in the WAL file when its transaction starts and ignores commits appended after that point [wal-concurrency]. There is still only one writer at a time, because all writes append to the same WAL file [wal-concurrency].\n\n## When WAL mode is the wrong choice\n\nWAL mode uses a shared-memory index in a file with the -shm suffix, so every process that opens the database must run on the same host [wal-limitations]. WAL mode does not work on a network filesystem, because the shared-memory index cannot be shared across machines [wal-limitations]. A database in WAL mode is enabled with PRAGMA journal_mode=WAL, and the setting persists: later connections open the database in WAL mode too [wal-limitations].\n\n## Sources\n\n- [wal-checkpoints] Checkpoints and WAL file growth\n- [wal-concurrency] Readers and writers in WAL mode\n- [wal-limitations] When WAL mode is the wrong choice\n"
+              }
+            ]
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "search_sources",
+                "args": {
+                  "query": "WAL checkpoints and checkpoint starvation"
+                }
+              },
+              {
+                "name": "read_source",
+                "args": {
+                  "source_id": "wal-checkpoints"
+                }
+              },
+              {
+                "name": "read_source",
+                "args": {
+                  "source_id": "wal-concurrency"
+                }
+              },
+              {
+                "name": "read_source",
+                "args": {
+                  "source_id": "wal-limitations"
+                }
+              },
+              {
+                "name": "exit_loop",
+                "args": {}
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "content_desk",
+        "user_id": "eval",
+        "state": {}
+      }
+    }
+  ]
+}

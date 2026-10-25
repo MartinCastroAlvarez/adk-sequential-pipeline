@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/>
+    </marker>
+    <marker id="arrowdim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="640" fill="#0b1020"/>
+  <g font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="80" y="118" font-size="58" font-weight="700" fill="#f8fafc">adk-sequential-pipeline</text>
+    <text x="80" y="170" font-size="26" fill="#94a3b8">Google ADK: a SequentialAgent with a writer ↔ critic LoopAgent inside,</text>
+    <text x="80" y="206" font-size="26" fill="#94a3b8">state handoff, guardrail callbacks and an eval set. Runs 100% locally.</text>
+
+    <!-- outer sequential frame -->
+    <rect x="60" y="270" width="1160" height="250" rx="18" fill="none" stroke="#1e293b" stroke-width="2"/>
+    <text x="80" y="300" font-size="18" fill="#64748b" font-family="'JetBrains Mono', Menlo, monospace">SequentialAgent content_desk</text>
+
+    <g font-size="21" font-weight="600" fill="#e2e8f0" text-anchor="middle">
+      <rect x="90" y="360" width="150" height="70" rx="12" fill="#111827" stroke="#334155" stroke-width="2"/>
+      <text x="165" y="402">researcher</text>
+      <rect x="275" y="360" width="140" height="70" rx="12" fill="#111827" stroke="#334155" stroke-width="2"/>
+      <text x="345" y="402">outliner</text>
+
+      <!-- loop -->
+      <rect x="450" y="320" width="370" height="170" rx="16" fill="#0f1a2e" stroke="#34d399" stroke-width="2.5"/>
+      <text x="635" y="348" font-size="17" font-weight="400" fill="#34d399" font-family="'JetBrains Mono', Menlo, monospace">LoopAgent · max_iterations</text>
+      <rect x="475" y="370" width="130" height="64" rx="12" fill="#111827" stroke="#34d399" stroke-width="2"/>
+      <text x="540" y="409">writer</text>
+      <rect x="665" y="370" width="130" height="64" rx="12" fill="#111827" stroke="#34d399" stroke-width="2"/>
+      <text x="730" y="409">critic</text>
+
+      <rect x="855" y="360" width="160" height="70" rx="12" fill="#111827" stroke="#334155" stroke-width="2"/>
+      <text x="935" y="402">fact_checker</text>
+      <rect x="1050" y="360" width="140" height="70" rx="12" fill="#111827" stroke="#334155" stroke-width="2"/>
+      <text x="1120" y="402">editor</text>
+    </g>
+
+    <g stroke-width="2.5" fill="none">
+      <line x1="240" y1="395" x2="272" y2="395" stroke="#64748b" marker-end="url(#arrowdim)"/>
+      <line x1="415" y1="395" x2="472" y2="395" stroke="#64748b" marker-end="url(#arrowdim)"/>
+      <line x1="605" y1="390" x2="662" y2="390" stroke="#34d399" marker-end="url(#arrow)"/>
+      <path d="M730,434 C730,475 540,475 540,437" stroke="#34d399" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+      <line x1="795" y1="395" x2="852" y2="395" stroke="#34d399" marker-end="url(#arrow)"/>
+      <line x1="1015" y1="395" x2="1047" y2="395" stroke="#64748b" marker-end="url(#arrowdim)"/>
+    </g>
+    <text x="635" y="482" font-size="15" fill="#34d399" text-anchor="middle" font-family="'JetBrains Mono', Menlo, monospace">score &lt; 8: revise</text>
+    <text x="935" y="458" font-size="15" fill="#34d399" text-anchor="middle" font-family="'JetBrains Mono', Menlo, monospace">↑ after exit_loop</text>
+
+    <text x="80" y="580" font-size="20" fill="#64748b" font-family="'JetBrains Mono', Menlo, monospace">output_key → {placeholder}  ·  PII scrub  ·  token budget  ·  tool allowlist  ·  adk eval</text>
+  </g>
+</svg>
