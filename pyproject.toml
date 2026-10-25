@@ -115,6 +115,8 @@ filterwarnings = [
     "ignore:\\[EXPERIMENTAL\\]:UserWarning",
     # ...and its eval runner still passes Runner(plugins=...) internally.
     "ignore:The `plugins` argument is deprecated:DeprecationWarning",
+    # google.api_core (pulled in by ADK's eval extra) warns about Python 3.11's end of life.
+    "ignore:You are using a Python version:FutureWarning",
 ]
 
 # --------------------------------------------------------------------------- #
