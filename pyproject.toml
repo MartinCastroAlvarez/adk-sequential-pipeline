@@ -46,7 +46,7 @@ content-desk = "content_desk.cli:main"
 python = ">=3.11,<3.15"
 google-adk = ">=2.13,<3"
 # The range google-adk[extensions] pins for its LiteLlm wrapper.
-litellm = ">=1.84,<1.106.3"
+litellm = ">=1.84,<1.109.2"
 pydantic = ">=2.12,<3"
 
 [tool.poetry.group.dev.dependencies]
